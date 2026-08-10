@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	importapp "github.com/juanparra/visoria-demo/internal/application/import"
+	imports "github.com/juanparra/visoria-demo/internal/application/import"
+	importapp "github.com/juanparra/visoria-demo/internal/application/importplayers"
 	store "github.com/juanparra/visoria-demo/internal/shared"
 )
 
@@ -17,19 +18,20 @@ func ImportPlayers(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
+	tournamentKey := r.FormValue("tournament")
+
 	service := importapp.NewService()
 
-	players, err := service.Execute(file)
+	players, err := service.Execute(file, tournamentKey)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// Guarda los jugadores en memoria antes de responder
 	store.Save(players)
 
-	response := importapp.ImportResponse{
-		Summary: importapp.Summary{
+	response := imports.ImportResponse{
+		Summary: imports.Summary{
 			Total:  len(players),
 			Valid:  len(players),
 			Errors: 0,

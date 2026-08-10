@@ -3,15 +3,16 @@ package domain
 import "time"
 
 type Player struct {
-	Name           string    `json:"name"`
-	Club           string    `json:"club"`
-	Scholarship    int       `json:"scholarship"`
-	BirthDate      time.Time `json:"birthDate"`
-	GuardianName   string    `json:"guardianName"`
-	PrimaryPhone   string    `json:"primaryPhone"`
-	SecondaryPhone string    `json:"secondaryPhone"`
-
-	Status   string   `json:"status"`
-	Errors   []string `json:"errors"`
-	Warnings []string `json:"warnings"`
+	Name           string      `json:"name"`
+	Club           string      `json:"club"`
+	Scholarship    int         `json:"scholarship"`
+	BirthDate      time.Time   `json:"birthDate"`
+	GuardianName   string      `json:"guardianName"`
+	PrimaryPhone   string      `json:"primaryPhone"`
+	SecondaryPhone string      `json:"secondaryPhone"`
+	Category       string      `json:"category"`
+	Tournament     *Tournament `json:"tournament,omitempty"`
+	Status         string      `json:"status"`
+	Errors         []string    `json:"errors"`
+	Warnings       []string    `json:"warnings"`
 }
