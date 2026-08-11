@@ -3,8 +3,10 @@ package importapp
 import (
 	"io"
 
+	tournamentapp "github.com/juanparra/visoria-demo/internal/application/tournament"
 	"github.com/juanparra/visoria-demo/internal/domain"
 	"github.com/juanparra/visoria-demo/internal/domain/services"
+	"github.com/juanparra/visoria-demo/internal/domain/validation"
 	"github.com/juanparra/visoria-demo/internal/infrastructure/excel"
 )
 
@@ -14,21 +16,19 @@ type Service struct {
 }
 
 func NewService() *Service {
-	categoryService := services.NewCategoryService()
-	tournamentService := services.NewTournamentService()
+	validator := validation.NewPlayerValidator()
 
 	return &Service{
 		reader: excel.NewReader(),
 		playerService: services.NewPlayerService(
-			categoryService,
-			tournamentService,
+			validator,
 		),
 	}
 }
 
 func (s *Service) Execute(
 	file io.Reader,
-	tournamentKey string,
+	config tournamentapp.TournamentConfig,
 ) ([]domain.Player, error) {
 
 	rows, err := s.reader.Read(file)
@@ -41,7 +41,7 @@ func (s *Service) Execute(
 	for i := range players {
 		players[i] = s.playerService.PreparePlayer(
 			players[i],
-			tournamentKey,
+			config,
 		)
 	}
 

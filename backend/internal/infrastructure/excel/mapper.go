@@ -2,6 +2,7 @@ package excel
 
 import (
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/juanparra/visoria-demo/internal/domain"
@@ -11,7 +12,26 @@ func get(row []string, index int) string {
 	if index >= len(row) {
 		return ""
 	}
-	return row[index]
+
+	return strings.TrimSpace(row[index])
+}
+
+func parseBirthDate(value string) (time.Time, error) {
+	formats := []string{
+		"01-02-06",
+		"01-02-2006",
+		"02/01/2006",
+		"02-01-2006",
+		"2006-01-02",
+	}
+
+	for _, format := range formats {
+		if date, err := time.Parse(format, value); err == nil {
+			return date, nil
+		}
+	}
+
+	return time.Time{}, nil
 }
 
 func MapPlayers(rows [][]string) []domain.Player {
@@ -26,7 +46,7 @@ func MapPlayers(rows [][]string) []domain.Player {
 
 		scholarship, _ := strconv.Atoi(get(row, 2))
 
-		birthDate, _ := time.Parse("02/01/2006", get(row, 3))
+		birthDate, _ := parseBirthDate(get(row, 3))
 
 		player := domain.Player{
 			Name:           get(row, 0),

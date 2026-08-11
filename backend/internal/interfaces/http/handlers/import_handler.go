@@ -18,11 +18,12 @@ func ImportPlayers(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	tournamentKey := r.FormValue("tournament")
+	// La configuración del torneo ya está guardada en memoria.
+	config := store.GetTournamentConfig()
 
 	service := importapp.NewService()
 
-	players, err := service.Execute(file, tournamentKey)
+	players, err := service.Execute(file, config)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -32,11 +33,23 @@ func ImportPlayers(w http.ResponseWriter, r *http.Request) {
 
 	response := imports.ImportResponse{
 		Summary: imports.Summary{
-			Total:  len(players),
-			Valid:  len(players),
-			Errors: 0,
+			Total:    len(players),
+			Valid:    0,
+			Errors:   0,
+			Warnings: 0,
 		},
 		Players: players,
+	}
+
+	for _, player := range players {
+		switch player.Status {
+		case "VALID":
+			response.Summary.Valid++
+		case "WARNING":
+			response.Summary.Warnings++
+		case "ERROR":
+			response.Summary.Errors++
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
