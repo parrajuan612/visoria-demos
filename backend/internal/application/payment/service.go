@@ -3,6 +3,7 @@ package payment
 import (
 	"fmt"
 
+	domain "github.com/juanparra/visoria-demo/internal/domain"
 	domainPayment "github.com/juanparra/visoria-demo/internal/domain/payment"
 )
 
@@ -12,8 +13,7 @@ func NewService() *Service {
 	return &Service{}
 }
 
-func (s *Service) GetTotal(scholarship int) (float64, error) {
-	// Se usa domainPayment.ScholarshipRules para acceder a la variable exportada
+func (s *Service) GetTotal(scholarship int) (int, error) {
 	for _, rule := range domainPayment.ScholarshipRules {
 		if rule.Scholarship == scholarship {
 			return rule.Total, nil
@@ -21,4 +21,22 @@ func (s *Service) GetTotal(scholarship int) (float64, error) {
 	}
 
 	return 0, fmt.Errorf("beca no configurada: %d%%", scholarship)
+}
+
+func (s *Service) GetPlan(scholarship int) (domain.PaymentPlan, error) {
+	for _, rule := range domainPayment.ScholarshipRules {
+		if rule.Scholarship == scholarship {
+			return domain.PaymentPlan{
+				Total:    rule.Total,
+				Payment1: rule.Payment1,
+				Payment2: rule.Payment2,
+				Payment3: rule.Payment3,
+			}, nil
+		}
+	}
+
+	return domain.PaymentPlan{}, fmt.Errorf(
+		"beca no configurada: %d%%",
+		scholarship,
+	)
 }

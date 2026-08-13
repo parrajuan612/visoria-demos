@@ -27,9 +27,9 @@ func SaveTournamentConfig(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetTournamentConfig(w http.ResponseWriter, r *http.Request) {
-	config := store.GetTournamentConfig()
+	configs := store.GetTournamentConfigs()
 
 	w.Header().Set("Content-Type", "application/json")
 
-	json.NewEncoder(w).Encode(config)
+	json.NewEncoder(w).Encode(configs)
 }

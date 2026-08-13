@@ -1,71 +1,53 @@
 package services
 
 import (
-	"time"
-
-	tournamentapp "github.com/juanparra/visoria-demo/internal/application/tournament"
 	"github.com/juanparra/visoria-demo/internal/domain"
+	domainPayment "github.com/juanparra/visoria-demo/internal/domain/payment"
 	"github.com/juanparra/visoria-demo/internal/domain/validation"
 )
 
 type PlayerService struct {
-	validator *validation.PlayerValidator
+	tournamentService *TournamentService
+	validator         *validation.PlayerValidator
+	categoryService   *CategoryService
 }
 
 func NewPlayerService(
+	tournamentService *TournamentService,
 	validator *validation.PlayerValidator,
+	categoryService *CategoryService,
 ) *PlayerService {
 	return &PlayerService{
-		validator: validator,
+		tournamentService: tournamentService,
+		validator:         validator,
+		categoryService:   categoryService,
 	}
 }
 
 func (s *PlayerService) PreparePlayer(
 	player domain.Player,
-	config tournamentapp.TournamentConfig,
 ) domain.Player {
 
-	startDate, _ := time.Parse("2006-01-02", config.StartDate)
-	endDate, _ := time.Parse("2006-01-02", config.EndDate)
+	// NOTA: Si en el futuro actualizas GetByBirthDate para que retorne varios torneos
+	// (ej: tournaments, exists := ...), tendrás que ajustar esta línea.
+	tournaments, exists := s.tournamentService.GetByBirthDate(player.BirthDate)
 
-	tournament := domain.Tournament{
-		Name:         config.Name,
-		Description:  config.Description,
-		StartDate:    startDate,
-		EndDate:      endDate,
-		CategoryText: make(map[string]string),
-	}
-
-	tournament.Payments.Plans = make(map[int]domain.PaymentPlan)
-
-	for _, category := range config.Categories {
-		tournament.CategoryText[category.Name] = category.Description
-
-		for _, year := range category.BirthYears {
-			if player.BirthDate.Year() == year {
-				player.Category = category.Name
-			}
+	if !exists {
+		player.Status = "ERROR"
+		player.Errors = []string{
+			"No existe un torneo configurado para el año de nacimiento del jugador",
 		}
+		return player
 	}
 
-	for _, scholarship := range config.Scholarships {
-		total := int(scholarship.Total)
+	// Ahora la asignación es directa porque ambos son arreglos
+	player.Tournaments = tournaments
+	// --------------------------------------
 
-		payment1 := total / 3
-		payment2 := total / 3
-		payment3 := total - payment1 - payment2
+	player.Category = s.categoryService.GetCategory(player.BirthDate)
 
-		tournament.Payments.Plans[scholarship.Percentage] = domain.PaymentPlan{
-			Total:    total,
-			Payment1: payment1,
-			Payment2: payment2,
-			Payment3: payment3,
-		}
-	}
+	plan, exists := domainPayment.GetPlan(player.Scholarship)
 
-	player.Tournament = &tournament
-
-	plan, exists := tournament.Payments.Plans[player.Scholarship]
 	if exists {
 		player.PaymentPlan = &plan
 	}

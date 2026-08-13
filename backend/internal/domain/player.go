@@ -11,7 +11,7 @@ type Player struct {
 	PrimaryPhone   string       `json:"primaryPhone"`
 	SecondaryPhone string       `json:"secondaryPhone"`
 	Category       string       `json:"category"`
-	Tournament     *Tournament  `json:"tournament,omitempty"`
+	Tournaments    []Tournament `json:"tournaments,omitempty"` // <--- CAMBIO AQUÍ (Array de torneos)
 	PaymentPlan    *PaymentPlan `json:"paymentPlan,omitempty"`
 	Status         string       `json:"status"`
 	Errors         []string     `json:"errors"`

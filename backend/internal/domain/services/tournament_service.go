@@ -3,133 +3,104 @@ package services
 import (
 	"time"
 
+	tournamentapp "github.com/juanparra/visoria-demo/internal/application/tournament"
 	"github.com/juanparra/visoria-demo/internal/domain"
+	store "github.com/juanparra/visoria-demo/internal/shared"
 )
 
-type TournamentService struct {
-	tournaments map[string]domain.Tournament
-}
+type TournamentService struct{}
 
 func NewTournamentService() *TournamentService {
-	return &TournamentService{
-		tournaments: map[string]domain.Tournament{
-			"mic": {
-				Name:        "MIC FOOTBALL COSTA BRAVA BARCELONA ESPAÑA",
-				Description: "Torneo MIC Football Costa Brava Barcelona España",
-			},
+	return &TournamentService{}
+}
 
-			"easter": {
-				Name:        "IDA EASTER CUP COMUNIDAD VALENCIANA",
-				Description: "Torneo IDA Easter Cup Comunidad Valenciana",
-			},
+// Actualizamos la firma para que retorne un []domain.Tournament
+func (s *TournamentService) GetByBirthDate(
+	birthDate time.Time,
+) ([]domain.Tournament, bool) {
 
-			"mic_easter": {
-				Name:        "MIC FOOTBALL / IDA EASTER CUP 2027",
-				Description: "Programa de intercambio deportivo",
+	configs := store.GetTournamentConfigs()
+	birthYear := birthDate.Year()
 
-				// 1. Integración de fechas generales del torneo
-				StartDate: parseDate("18/03/2027"),
-				EndDate:   parseDate("28/03/2027"),
+	// Creamos un slice para almacenar todos los torneos que coincidan
+	var matchedTournaments []domain.Tournament
 
-				Travel: domain.TravelConfig{
-					DepartureDate:    parseDate("18/03/2027"),
-					ArrivalDate:      parseDate("19/03/2027"),
-					ArrivalAirport:   "Barcelona",
-					ReturnDate:       parseDate("28/03/2027"),
-					DepartureAirport: "Barcelona",
-				},
+	for _, config := range configs {
+		for _, year := range config.BirthYears {
+			if year == birthYear {
+				// Si coincide, lo agregamos al slice
+				matchedTournaments = append(matchedTournaments, configToDomain(config))
+				// Rompemos el ciclo interno de años para no agregar el mismo torneo dos veces
+				// en caso de que el JSON tuviera un año duplicado por error.
+				break
+			}
+		}
+	}
 
-				Payments: domain.PaymentConfig{
-					Payment1Date: parseDate("10/01/2027"),
-					Payment2Date: parseDate("10/02/2027"),
-					Payment3Date: parseDate("10/03/2027"),
+	// Si encontramos al menos un torneo, retornamos el slice completo y true
+	if len(matchedTournaments) > 0 {
+		return matchedTournaments, true
+	}
 
-					Plans: map[int]domain.PaymentPlan{
-						0: {
-							Total:    2800,
-							Payment1: 930,
-							Payment2: 930,
-							Payment3: 940,
-						},
-						30: {
-							Total:    1960,
-							Payment1: 650,
-							Payment2: 650,
-							Payment3: 660,
-						},
-						50: {
-							Total:    1550,
-							Payment1: 500,
-							Payment2: 500,
-							Payment3: 550,
-						},
-						70: {
-							Total:    990,
-							Payment1: 495,
-							Payment2: 495,
-							Payment3: 0,
-						},
-						100: {
-							Total:    200,
-							Payment1: 200,
-							Payment2: 0,
-							Payment3: 0,
-						},
-					},
-				},
+	// Si no hubo coincidencias, retornamos nil y false
+	return nil, false
+}
 
-				CategoryText: map[string]string{
-					"JUVENIL":  "JUVENILES nacidos en el año 2008-2009-2010",
-					"CADETE":   "CADETES nacidos en el año 2011-2012",
-					"INFANTIL": "INFANTIL nacidos en el año 2013-2014",
-					"ALEVÍN":   "ALEVÍN nacidos en el año 2015-2016",
-					"BENJAMÍN": "BENJAMÍN nacidos en el año 2017-2018",
-				},
-			},
+func configToDomain(
+	config tournamentapp.TournamentConfig,
+) domain.Tournament {
 
-			"villarreal": {
-				Name:        "VILLARREAL YELLOW CUP",
-				Description: "Torneo Villarreal Yellow Cup",
-			},
+	startDate, _ := time.Parse("2006-01-02", config.StartDate)
+	endDate, _ := time.Parse("2006-01-02", config.EndDate)
 
-			"custom": {
-				Name:        "TORNEO PERSONALIZADO",
-				Description: "Programa de intercambio deportivo",
-			},
+	departureDate, _ := time.Parse(
+		"2006-01-02",
+		config.Travel.DepartureDate,
+	)
+
+	arrivalDate, _ := time.Parse(
+		"2006-01-02",
+		config.Travel.ArrivalDate,
+	)
+
+	returnDate, _ := time.Parse(
+		"2006-01-02",
+		config.Travel.ReturnDate,
+	)
+
+	payment1Date, _ := time.Parse(
+		"2006-01-02",
+		config.Payments.Payment1Date,
+	)
+
+	payment2Date, _ := time.Parse(
+		"2006-01-02",
+		config.Payments.Payment2Date,
+	)
+
+	payment3Date, _ := time.Parse(
+		"2006-01-02",
+		config.Payments.Payment3Date,
+	)
+
+	return domain.Tournament{
+		Name:        config.Name,
+		Description: config.Description,
+		StartDate:   startDate,
+		EndDate:     endDate,
+
+		Travel: domain.TravelConfig{
+			DepartureDate:    departureDate,
+			ArrivalDate:      arrivalDate,
+			ArrivalAirport:   config.Travel.ArrivalAirport,
+			ReturnDate:       returnDate,
+			DepartureAirport: config.Travel.DepartureAirport,
+		},
+
+		Payments: domain.PaymentConfig{
+			Payment1Date: payment1Date,
+			Payment2Date: payment2Date,
+			Payment3Date: payment3Date,
 		},
 	}
-}
-
-func (s *TournamentService) Get(key string) (domain.Tournament, bool) {
-	tournament, exists := s.tournaments[key]
-
-	if !exists {
-		return domain.Tournament{}, false
-	}
-
-	return tournament, true
-}
-
-func (s *TournamentService) SetDates(
-	key string,
-	startDate time.Time,
-	endDate time.Time,
-) bool {
-	tournament, exists := s.tournaments[key]
-
-	if !exists {
-		return false
-	}
-
-	tournament.StartDate = startDate
-	tournament.EndDate = endDate
-
-	s.tournaments[key] = tournament
-
-	return true
-}
-
-func parseDate(value string) time.Time {
-	date, _ := time.Parse("02/01/2006", value)
-	return date
 }

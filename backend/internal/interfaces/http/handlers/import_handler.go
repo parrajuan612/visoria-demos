@@ -18,12 +18,9 @@ func ImportPlayers(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	// La configuración del torneo ya está guardada en memoria.
-	config := store.GetTournamentConfig()
-
 	service := importapp.NewService()
 
-	players, err := service.Execute(file, config)
+	players, err := service.Execute(file)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

@@ -8,19 +8,19 @@ import (
 
 var (
 	configMu sync.RWMutex
-	config   tournamentapp.TournamentConfig
+	configs  []tournamentapp.TournamentConfig
 )
 
-func SaveTournamentConfig(newConfig tournamentapp.TournamentConfig) {
+func SaveTournamentConfig(config tournamentapp.TournamentConfig) {
 	configMu.Lock()
 	defer configMu.Unlock()
 
-	config = newConfig
+	configs = append(configs, config)
 }
 
-func GetTournamentConfig() tournamentapp.TournamentConfig {
+func GetTournamentConfigs() []tournamentapp.TournamentConfig {
 	configMu.RLock()
 	defer configMu.RUnlock()
 
-	return config
+	return append([]tournamentapp.TournamentConfig(nil), configs...)
 }
