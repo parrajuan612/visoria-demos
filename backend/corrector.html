@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Corrector de Links - Majestic</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 30px; margin: 0; display: flex; justify-content: center; }
+        .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 600px; }
+        h2 { color: #333; margin-top: 0; }
+        label { display: block; margin-bottom: 8px; color: #555; font-weight: bold; }
+        input[type="text"] { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        button { background-color: #25D366; color: white; border: none; padding: 12px 20px; font-size: 16px; border-radius: 6px; cursor: pointer; width: 100%; margin-bottom: 20px; font-weight: bold; }
+        button:hover { background-color: #1ebd5a; }
+        .result-box { display: none; background: #e9f7ef; padding: 15px; border-radius: 6px; border: 1px solid #c3e6cb; }
+        textarea { width: 100%; height: 160px; padding: 10px; border: 1px solid #ccc; border-radius: 6px; resize: none; margin-bottom: 10px; font-family: inherit; font-size: 14px; box-sizing: border-box; }
+        .btn-copy { background-color: #007bff; }
+        .btn-copy:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🛠️ Corrector Rápido de Enlaces</h2>
+    <p>Pega el link malo que le enviaste al papá y esto generará el mensaje de corrección.</p>
+    
+    <label>Link equivocado (el que empieza por https://wa.me/...):</label>
+    <input type="text" id="badLink" placeholder="Pega el enlace aquí...">
+    
+    <button onclick="corregirLink()">Corregir y Generar Mensaje</button>
+
+    <div class="result-box" id="resultArea">
+        <label>Texto listo para enviar (Cópialo y pégalo en el chat del papá):</label>
+        <textarea id="finalText" readonly></textarea>
+        <button class="btn-copy" onclick="copiarTexto()">Copiar Texto</button>
+    </div>
+</div>
+
+<script>
+    function corregirLink() {
+        const linkInput = document.getElementById('badLink').value;
+        const resultArea = document.getElementById('resultArea');
+        const finalText = document.getElementById('finalText');
+        
+        if(!linkInput.includes("https://wa.me/")) {
+            alert("Por favor pega un enlace de wa.me válido.");
+            return;
+        }
+
+        // 1. Extraer el texto codificado de la URL mala
+        let urlObj;
+        try {
+            urlObj = new URL(linkInput);
+        } catch (e) {
+            alert("Enlace inválido"); return;
+        }
+        
+        const textoOriginal = urlObj.searchParams.get('text');
+        
+        if(!textoOriginal) {
+            alert("No se encontró texto en ese enlace."); return;
+        }
+
+        // 2. Construir el nuevo enlace con el número correcto (3228467206)
+        const nuevoLink = "https://wa.me/573228467206?text=" + encodeURIComponent(textoOriginal);
+
+        // 3. Construir el mensaje de disculpa EXPLICITO
+        const mensajeDisculpa = 
+"Hola, te ofrecemos una sincera disculpa.\n\n" +
+"El enlace que te enviamos en el mensaje anterior tenía un error.\n\n" +
+"👉 El lugar correcto donde tienes que hablar con Coordinación es a través de este número. Por favor, haz clic aquí para continuar:\n" +
+nuevoLink;
+
+        // 4. Mostrar el resultado
+        finalText.value = mensajeDisculpa;
+        resultArea.style.display = "block";
+    }
+
+    function copiarTexto() {
+        const finalText = document.getElementById('finalText');
+        finalText.select();
+        document.execCommand("copy");
+        
+        const btn = document.querySelector('.btn-copy');
+        btn.innerText = "¡Texto Copiado! ✅";
+        btn.style.backgroundColor = "#28a745";
+        
+        setTimeout(() => {
+            btn.innerText = "Copiar Texto";
+            btn.style.backgroundColor = "#007bff";
+        }, 2000);
+    }
+</script>
+
+</body>
+</html>

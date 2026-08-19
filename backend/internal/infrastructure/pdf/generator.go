@@ -65,7 +65,7 @@ func (g *Generator) Generate(player domain.Player) (string, error) {
 	pdf.Ln(5)
 
 	pdf.SetFont("Arial", "B", 10)
-	nombresTorneos := "Soccer Melgar del 07/08/2026 al 09/08/2026"
+	nombresTorneos := "Duelo de arqueros. Cesar Rubio Agosto 2026"
 	// for i, t := range player.Tournaments {
 	//  if i > 0 {
 	//      nombresTorneos += " / "

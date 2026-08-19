@@ -38,6 +38,6 @@ func RegisterRoutes() *http.ServeMux {
 		"GET /api/v1/tournaments/config",
 		handlers.GetTournamentConfig,
 	)
-
+	http.Handle("/pdfs/", http.StripPrefix("/pdfs/", http.FileServer(http.Dir("./uploads/pdfs"))))
 	return mux
 }
